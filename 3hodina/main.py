@@ -10,7 +10,7 @@ while (start <= koniec):
     start = start + 1
 """
 
-
+"""
 samohlasky = "aeiouôáäéíúyý"
 spoluhlasky = "qwrtzpsdfghjklxcvbnm"
 cisla = "0123456789"
@@ -40,3 +40,31 @@ print(pocet_samohlasok, "samohlasok, ")
 print(pocet_spoluhlasky, " spoluhlasok, ")
 print(pocet_cisel, " cisel")
 print( pocet_znakov, " znakov.")
+"""
+
+zaciatok_prvy = int(input("Ako začína prvý interval"))
+koniec_prvy = int(input("Ako končí prvý interval"))
+zaciatok_druhy = int(input("Ako začína druhý interval"))
+koniec_druhy = int(input("Ako končí druhý interval"))
+
+koniec_druhy = koniec_druhy +1
+koniec_prvy = koniec_prvy +1
+
+"""
+interval1 = []
+interval2 = []
+
+range_interval1 = koniec_prvy - zaciatok_prvy +1
+for i in range(range_interval1):
+    poradie = i + zaciatok_prvy
+    interval1.append(poradie)
+    print(interval1)
+"""
+for k in range(zaciatok_prvy, koniec_prvy):
+    for l in range(zaciatok_druhy, koniec_druhy ):
+        vysledok = k + l
+        if vysledok in range(zaciatok_prvy,koniec_prvy):
+            print("[",k,";", l,"]")
+        elif vysledok in range(zaciatok_druhy, koniec_druhy):
+            print("[", k, ";", l, "]")
+
