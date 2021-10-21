@@ -3,6 +3,7 @@
 Toto
 je viac riadkový komentár
 """
+"""
 print("Ahoj svet")
 
 x = 10
@@ -21,5 +22,5 @@ y = 20
 z = x
 x = y
 y = z
-
+"""
 
