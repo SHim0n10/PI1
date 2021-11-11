@@ -58,6 +58,7 @@ for k in range(zaciatok_prvy, koniec_prvy):
         elif vysledok in range(zaciatok_druhy, koniec_druhy):
             print("[", k, ";", l, "]")
 """
+<<<<<<< HEAD
 """
 riadky = int(input("Zadaj počet riadkov:"))
 stlpce = int(input("Zadaj počet stlpcov:"))
@@ -91,3 +92,22 @@ for p in range(strana):
             body = k + 2
             medzera1 = medzera1 - 2
 """
+=======
+znaky = "qwertzuiopasdfghjklyxcvbnmQWERTZUIOPASDFGHJKLYXCVBNM&*;+ľščťžýáíé=´úäô§ň,.-12345678900%/("
+for opak in range(slovo.len()):
+    print(znaky[opak], end=, '')
+    for opak2 in range(slovo.len()):
+        print(znaky[opak2], end=, '')
+        for opak3 in range(slovo.len()):
+            print(znaky[opak3], end=, '')
+            for opak4 in range(slovo.len()):
+                print(znaky[opak4], end=, '')
+                for opak5 in range(slovo.len()):
+                    print(znaky[opak5], end=, '')
+                    for opak6 in range(slovo.len()):
+                        print(znaky[opak2], end=, '')
+                        for opak7 in range(slovo.len()):
+                            print(znaky[opak7], end=, '')
+                            for opak8 in range(slovo.len()):
+                                print(znaky[opak8], end=, '')
+>>>>>>> 07a54dae9e1b0530a34dd4a227d3777ed786ec95
