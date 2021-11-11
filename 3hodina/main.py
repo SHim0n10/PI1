@@ -58,3 +58,36 @@ for k in range(zaciatok_prvy, koniec_prvy):
         elif vysledok in range(zaciatok_druhy, koniec_druhy):
             print("[", k, ";", l, "]")
 """
+"""
+riadky = int(input("Zadaj počet riadkov:"))
+stlpce = int(input("Zadaj počet stlpcov:"))
+
+
+
+
+
+for i in range(riadky):
+    for p in range(stlpce):
+        print("*", end= '')
+    print( '',sep='')
+"""
+"""
+vyska = int(input("Aka je vyska trojuholnika"))
+strana = 1
+for i in range(vyska):
+    strana = strana + 2
+for p in range(strana):
+    medzera = p * 2
+    medzera1 = medzera
+    body = 1
+    for k in range(vyska):
+
+        while body <= strana:
+            for j in range(medzera1):
+                print('a', end= '')
+            for b in range(body):
+                print('*', end= '')
+            print('',sep='')
+            body = k + 2
+            medzera1 = medzera1 - 2
+"""
