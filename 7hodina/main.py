@@ -1,16 +1,19 @@
-# This is a sample Python script.
+pocet_suborov = 60
+vstup = []
+basnicka = open("./basnicka.txt", encoding="utf-8")
+for riadok in basnicka:
+    vstup += riadok.split()
+dlzka_basne = len(vstup)
+k = dlzka_basne
+j = 0
+for i in range(pocet_suborov):
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+    if i >= k:
+        j = i - dlzka_basne
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    novy_subor = i
+    filename = "%s.txt" % novy_subor
+    otvoreny_subor = open(filename, mode="w", encoding="utf-8")
+    print(vstup[j], file=otvoreny_subor)
+    otvoreny_subor.close()
+    j += 1
