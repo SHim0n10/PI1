@@ -13,7 +13,9 @@ for i in range(pocet_suborov):
 
     novy_subor = i
     filename = "%s.txt" % novy_subor
+    print(filename)
     otvoreny_subor = open(filename, mode="w", encoding="utf-8")
     print(vstup[j], file=otvoreny_subor)
     otvoreny_subor.close()
     j += 1
+    
