@@ -1,5 +1,0 @@
-import pyglet
-
-#KONSTANTY
-SIRKA = 925
-VYSKA = 500
