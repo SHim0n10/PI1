@@ -145,7 +145,15 @@ class Spaceship(SpaceObject):
     """
     def shoot(self):
         # Todo: Vytvor nový objekt typu Laser a nastav parameter fire na hodnotu delayu
-        pass
+        sprite = pyglet.image.load('Assetss/PNG/Lasers/laserBlue01.png')
+        position_x = self.sprite.x
+        position_y = self.sprite.y
+        rotation_ship = self.sprite.rotation
+        laser = Laser(sprite, position_x, position_y)
+        laser.rotation = rotation_ship
+        self.fire = DELAY
+        game_objects.append(laser)
+
 
     """
     Každý frame sa vykoná táto metóda to znamená v našom prípade:
@@ -167,11 +175,11 @@ class Spaceship(SpaceObject):
 
         "Otočenie doľava - A"
         if 'A' in pressed_keyboards:
-            self.rotation -= ROTATION_SPEED
+            self.rotation += ROTATION_SPEED
 
         "Otočenie doprava - D"
         if 'D' in pressed_keyboards:
-            self.rotation += ROTATION_SPEED
+            self.rotation -= ROTATION_SPEED
 
         "Ručná brzda - SHIFT"
         if 'SHIFT' in pressed_keyboards:
@@ -180,6 +188,9 @@ class Spaceship(SpaceObject):
 
         # Todo: pridaj akciu po stlačení tlačítka SPACE = shoot
         #self.fire -= dt # Todo: Je treba odčítať delay z fire
+        if 'SPACE' in pressed_keyboards:
+            self.shoot()
+            self.fire-=dt
 
         "VYBERIE VŠETKY OSTATNE OBJEKTY OKREM SEBA SAMA"
         for obj in [o for o in game_objects if o != self]:
@@ -208,7 +219,7 @@ class Asteroid(SpaceObject):
         ship.reset()
         self.delete()
 
-    "Metóda ktorá sa vykoná ak dôjde ku kolíziiwwwww a asteroidu"
+    "Metóda ktorá sa vykoná ak dôjde ku kolízii a asteroidu"
     def hit_by_laser(self, laser):
         # Todo: update score + kolizia
         pass
@@ -218,7 +229,8 @@ Trieda Laser
 """
 class Laser(SpaceObject):
     #Todo: dorobiť triedu Laser
-    pass
+    def laser_hit(self):
+        self.delete()
 
 
 """
@@ -243,6 +255,7 @@ class Game:
                            'Assetss/PNG/Meteors/meteorGrey_med1.png',
                            'Assetss/PNG/Meteors/meteorGrey_small1.png',
                            'Assetss/PNG/Meteors/meteorGrey_tiny1.png']
+        
 
     """
     Vytvorenie objektov pre začiatok hry
