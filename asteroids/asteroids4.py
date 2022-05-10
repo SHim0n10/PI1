@@ -21,9 +21,9 @@ pressed_keyboards = set()       #MNOŽINA ZMAČKNUTÝCH KLÁVES
 
 # Todo: Pridaj KONŠTANTY pre delay na strelbu, laserlifetime, laserspeed
 "Laser"
-DELAY = 0.5
-LASERLIFETIME = 3
-LASERSPEED = 1
+DELAY = 0.3
+LASERLIFETIME = 1.5
+LASERSPEED = 250
 
 "Score"
 score = 0
@@ -145,14 +145,14 @@ class Spaceship(SpaceObject):
     """
     def shoot(self):
         # Todo: Vytvor nový objekt typu Laser a nastav parameter fire na hodnotu delayu
-        sprite = pyglet.image.load('Assetss/PNG/Lasers/laserBlue01.png')
+        sprite = pyglet.image.load('Assetss/PNG/Lasers/laserBlue06.png')
         position_x = self.sprite.x
         position_y = self.sprite.y
         rotation_ship = self.sprite.rotation
-        laser = Laser(sprite, position_x, position_y)
-        laser.rotation = rotation_ship
-        self.fire = DELAY
+        laser = Laser(sprite, position_x, position_y, rotation_ship)
+        laser.rotation = self.rotation
         game_objects.append(laser)
+        
 
 
     """
@@ -189,8 +189,11 @@ class Spaceship(SpaceObject):
         # Todo: pridaj akciu po stlačení tlačítka SPACE = shoot
         #self.fire -= dt # Todo: Je treba odčítať delay z fire
         if 'SPACE' in pressed_keyboards:
-            self.shoot()
-            self.fire-=dt
+            if self.fire <= 0:
+                self.shoot()
+                self.fire = DELAY
+            self.fire -= dt
+            
 
         "VYBERIE VŠETKY OSTATNE OBJEKTY OKREM SEBA SAMA"
         for obj in [o for o in game_objects if o != self]:
@@ -221,16 +224,37 @@ class Asteroid(SpaceObject):
 
     "Metóda ktorá sa vykoná ak dôjde ku kolízii a asteroidu"
     def hit_by_laser(self, laser):
-        # Todo: update score + kolizia
+        global score
+        laser.delete()
+        score += 10
+        self.delete()
         pass
 
 """
 Trieda Laser
 """
 class Laser(SpaceObject):
-    #Todo: dorobiť triedu Laser
-    def laser_hit(self):
-        self.delete()
+    def __init__(self, sprite, x, y, rotation):
+        super().__init__(sprite, x, y)
+        self.lifetime = LASERLIFETIME
+        print(f"{self.x_speed} rychlost x")
+    #Todo: dorobiť triedu Lasera
+    def tick(self, dt):
+        super().tick(dt)
+        self.lifetime -= dt
+        if self.lifetime <= 0:
+            self.delete()
+        self.x_speed = LASERSPEED * math.cos(self.rotation)
+        self.y_speed = LASERSPEED * math.sin(self.rotation)
+        for obj in [o for o in game_objects if o != self]:
+            # d = distance medzi objektami
+            d = self.distance(obj)
+            if d < self.radius + obj.radius:
+                obj.hit_by_laser(self)
+                break
+        
+        
+        
 
 
 """
@@ -306,8 +330,8 @@ class Game:
         self.background.draw()
 
         "Vykreslenie koliznych koliečok"
-        for o in game_objects:
-            draw_circle(o.sprite.x, o.sprite.y, o.radius)
+        # for o in game_objects:
+        #     draw_circle(o.sprite.x, o.sprite.y, o.radius)
 
         # Táto časť sa stará o to aby bol prechod cez okraje okna plynulý a nie skokový
         for x_offset in (-self.window.width, 0, self.window.width):
@@ -337,6 +361,8 @@ class Game:
             pressed_keyboards.add('D')
         if symbol == key.LSHIFT:
             pressed_keyboards.add('SHIFT')
+        if symbol == key.SPACE:
+            pressed_keyboards.add('SPACE')
         #Todo: SPACE
 
     """
@@ -353,6 +379,8 @@ class Game:
             pressed_keyboards.discard('D')
         if symbol == key.LSHIFT:
             pressed_keyboards.discard('SHIFT')
+        if symbol == key.SPACE:
+            pressed_keyboards.discard('SPACE')
         # Todo: SPACE
 
     """
