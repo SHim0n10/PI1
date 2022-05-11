@@ -1,3 +1,4 @@
+from asyncio import shield
 import math
 import random
 
@@ -23,11 +24,18 @@ pressed_keyboards = set()       #MNOŽINA ZMAČKNUTÝCH KLÁVES
 "Laser"
 DELAY = 0.3
 LASERLIFETIME = 1.5
-LASERSPEED = 250
+LASERSPEED = 300
+
+
+
+SHIELD = 5
+pozicia_x = 0
+pozicia_y = 0
+rotacia = 0
 
 "Score"
 score = 0
-scoreLabel = pyglet.text.Label(text=str(score), font_size=40,x = 1150, y = 760, anchor_x='right', anchor_y='center', batch=batch )
+scoreLabel = pyglet.text.Label(text=str(score), font_size=40,x = 1150, y = 760, anchor_x='right', anchor_y='center')
 
 "------------------- FUNKCIE __________________"
 
@@ -98,7 +106,7 @@ class SpaceObject:
 
     "Metoda ktora deletne objekt"
     def delete(self, dt =0 ):
-        self.sprite.delete()
+        #self.sprite.delete()
         game_objects.remove(self)
 
     """
@@ -138,22 +146,46 @@ class Spaceship(SpaceObject):
     "Konśtruktor"
     def __init__(self, sprite, x ,y):
         super().__init__(sprite,x,y)
-        self.fire = -1 #PREMENNÁ PRE DELAY streľby
+        self.fire = -1
+        self.shield = True
+        self.get_shield()
 
+        flame_sprite = pyglet.image.load('Assetss\PNG\Effects\\fire08.png')
+        set_anchor_of_image_to_center(flame_sprite)
+        self.flame = pyglet.sprite.Sprite(flame_sprite,batch=batch)
+        self.flame.visible = False
+
+    "SHIELD"
+    def get_shield(self):
+        self.shield = True
+        img = pyglet.image.load('Assetss\PNG\Effects\shield1.png')
+        set_anchor_of_image_to_center(img)
+        stit = Shield(img, self.sprite.x, self.sprite.y)
+        stit.rotation = self.rotation
+        game_objects.append(stit)
+        pyglet.clock.schedule_once(self.shield_loose, SHIELD)
+         #PREMENNÁ PRE DELAY streľby
+    def shield_loose(self, time):
+        self.shield = False
     """
     Metóda zodpovedná za vystrelenie laseru
     """
     def shoot(self):
         # Todo: Vytvor nový objekt typu Laser a nastav parameter fire na hodnotu delayu
         sprite = pyglet.image.load('Assetss/PNG/Lasers/laserBlue06.png')
+        set_anchor_of_image_to_center(sprite)
         position_x = self.sprite.x
         position_y = self.sprite.y
-        rotation_ship = self.sprite.rotation
-        laser = Laser(sprite, position_x, position_y, rotation_ship)
+        
+        laser = Laser(sprite, position_x, position_y)
         laser.rotation = self.rotation
         game_objects.append(laser)
         
-
+    def get_position(self):
+        global pozicia_x,pozicia_y,rotacia
+        pozicia_x = self.sprite.x
+        pozicia_y = self.sprite.y
+        rotacia = self.rotation
 
     """
     Každý frame sa vykoná táto metóda to znamená v našom prípade:
@@ -162,11 +194,20 @@ class Spaceship(SpaceObject):
     """
     def tick(self, dt):
         super().tick(dt)
+        
 
         "Zrýchlenie po kliknutí klávesy W. Výpočet novej rýchlosti"
         if 'W' in pressed_keyboards:
             self.x_speed = self.x_speed + dt * ACCELERATION * math.cos(self.rotation)
             self.y_speed = self.y_speed + dt * ACCELERATION * math.sin(self.rotation)
+
+            #FLAME
+            self.flame.x = self.sprite.x - math.cos(self.rotation) * self.radius
+            self.flame.y = self.sprite.y - math.sin(self.rotation) * self.radius
+            self.flame.rotation = self.sprite.rotation
+            self.flame.visible = True
+        else:
+            self.flame.visible = False
 
         "Spomalenie/spätný chod po kliknutí klávesy S"
         if 'S' in pressed_keyboards:
@@ -193,8 +234,11 @@ class Spaceship(SpaceObject):
                 self.shoot()
                 self.fire = DELAY
             self.fire -= dt
+        
+        #Ak je shield aktívny
+        if self.shield:
+            self.get_position()
             
-
         "VYBERIE VŠETKY OSTATNE OBJEKTY OKREM SEBA SAMA"
         for obj in [o for o in game_objects if o != self]:
             # d = distance medzi objektami
@@ -218,14 +262,19 @@ Trieda Asteroid
 class Asteroid(SpaceObject):
     "Metóda ktorá sa vykoná ak dôjde ku kolízii lode a asteroidu"
     def hit_by_spaceship(self, ship):
-        pressed_keyboards.clear()
-        ship.reset()
+        if ship.shield == False:
+            pressed_keyboards.clear()
+            ship.reset()
+            ship.get_shield()
+        
         self.delete()
 
     "Metóda ktorá sa vykoná ak dôjde ku kolízii a asteroidu"
     def hit_by_laser(self, laser):
-        global score
+        global score, scoreLabel
         laser.delete()
+        
+        scoreLabel = pyglet.text.Label(text=str(score), font_size=40,x = 1150, y = 760, anchor_x='right', anchor_y='center')
         score += 10
         self.delete()
         pass
@@ -234,10 +283,9 @@ class Asteroid(SpaceObject):
 Trieda Laser
 """
 class Laser(SpaceObject):
-    def __init__(self, sprite, x, y, rotation):
+    def __init__(self, sprite, x, y):
         super().__init__(sprite, x, y)
         self.lifetime = LASERLIFETIME
-        print(f"{self.x_speed} rychlost x")
     #Todo: dorobiť triedu Lasera
     def tick(self, dt):
         super().tick(dt)
@@ -252,6 +300,25 @@ class Laser(SpaceObject):
             if d < self.radius + obj.radius:
                 obj.hit_by_laser(self)
                 break
+
+class Shield(SpaceObject):
+    def __init__(self, sprite, x, y):
+        super().__init__(sprite, x, y)
+        self.shieldtime = SHIELD
+    
+    def change_position(self):
+        global pozicia_x,pozicia_y,rotacia
+        self.sprite.x = pozicia_x
+        self.sprite.y = pozicia_y
+        self.rotation = rotacia
+    def tick(self, dt):
+        super().tick(dt)
+        if self.shieldtime <= 0:
+            self.delete()
+        self.shieldtime -= dt
+        self.change_position()
+        
+    
         
         
         
@@ -324,14 +391,19 @@ class Game:
     Event metóda ktorá sa volá na udalosť on_draw stále dookola
     """
     def draw_game(self):
+        global score, scoreLabel
+        
         # Vymaže aktualny obsah okna
         self.window.clear()
         # Vykreslenie pozadia
         self.background.draw()
+        
+        scoreLabel = pyglet.text.Label(text=str(score), font_size=40,x = 1150, y = 760, anchor_x='right', anchor_y='center')
+        scoreLabel.draw()
 
         "Vykreslenie koliznych koliečok"
         # for o in game_objects:
-        #     draw_circle(o.sprite.x, o.sprite.y, o.radius)
+            # draw_circle(o.sprite.x, o.sprite.y, o.radius)
 
         # Táto časť sa stará o to aby bol prechod cez okraje okna plynulý a nie skokový
         for x_offset in (-self.window.width, 0, self.window.width):
@@ -342,6 +414,7 @@ class Game:
                 gl.glTranslatef(x_offset, y_offset, 0)
 
                 # Draw !!! -> Toto vykreslí všetky naše sprites
+                
                 batch.draw()
 
                 # Restore remembered state (this cancels the glTranslatef)
