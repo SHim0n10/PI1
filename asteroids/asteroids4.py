@@ -28,14 +28,18 @@ LASERSPEED = 300
 
 
 
-SHIELD = 5
+SHIELD = 1
 pozicia_x = 0
 pozicia_y = 0
 rotacia = 0
+lifes = 3
 
 "Score"
 score = 0
 scoreLabel = pyglet.text.Label(text=str(score), font_size=40,x = 1150, y = 760, anchor_x='right', anchor_y='center')
+
+
+my_Player = pyglet.media.Player()
 
 "------------------- FUNKCIE __________________"
 
@@ -155,8 +159,14 @@ class Spaceship(SpaceObject):
         self.flame = pyglet.sprite.Sprite(flame_sprite,batch=batch)
         self.flame.visible = False
 
+        self.snd_laser = pyglet.media.load('Assetss\Bonus\sfx_laser1.ogg', streaming=False)
+        self.snd_shield_up = pyglet.media.load('Assetss\Bonus\sfx_shieldUp.ogg', streaming=False)
+        self.snd_shield_down = pyglet.media.load('Assetss\Bonus\sfx_shieldDown.ogg', streaming=False)
+        
+
     "SHIELD"
     def get_shield(self):
+        global lifes
         self.shield = True
         img = pyglet.image.load('Assetss\PNG\Effects\shield1.png')
         set_anchor_of_image_to_center(img)
@@ -164,9 +174,18 @@ class Spaceship(SpaceObject):
         stit.rotation = self.rotation
         game_objects.append(stit)
         pyglet.clock.schedule_once(self.shield_loose, SHIELD)
+        self.snd_shield_up = pyglet.media.load('Assetss\Bonus\sfx_shieldUp.ogg', streaming=False)
+        my_Player.queue(self.snd_shield_up)
+
+        if lifes <= 0:
+            my_Player.delete()
+        my_Player.play()
+
          #PREMENNÁ PRE DELAY streľby
     def shield_loose(self, time):
         self.shield = False
+        my_Player.queue(self.snd_shield_down)
+        my_Player.play()
     """
     Metóda zodpovedná za vystrelenie laseru
     """
@@ -180,6 +199,7 @@ class Spaceship(SpaceObject):
         laser = Laser(sprite, position_x, position_y)
         laser.rotation = self.rotation
         game_objects.append(laser)
+        
         
     def get_position(self):
         global pozicia_x,pozicia_y,rotacia
@@ -232,6 +252,9 @@ class Spaceship(SpaceObject):
         if 'SPACE' in pressed_keyboards:
             if self.fire <= 0:
                 self.shoot()
+                my_Player.delete()
+                my_Player.queue(self.snd_laser)
+                my_Player.play()
                 self.fire = DELAY
             self.fire -= dt
         
@@ -262,11 +285,16 @@ Trieda Asteroid
 class Asteroid(SpaceObject):
     "Metóda ktorá sa vykoná ak dôjde ku kolízii lode a asteroidu"
     def hit_by_spaceship(self, ship):
+        global lifes
         if ship.shield == False:
             pressed_keyboards.clear()
             ship.reset()
-            ship.get_shield()
-        
+            lifes -= 1
+            if lifes <= 0:
+                my_Player.delete()
+            else:
+                ship.get_shield()
+            
         self.delete()
 
     "Metóda ktorá sa vykoná ak dôjde ku kolízii a asteroidu"
@@ -334,6 +362,11 @@ class Game:
     def __init__(self):
         self.window = None
         game_objects = []
+        space_lifes = pyglet.image.load(r'Assetss\PNG\UI\playerLife1_blue.png')
+        set_anchor_of_image_to_center(space_lifes)
+        self.ship_lifes = pyglet.sprite.Sprite(space_lifes,batch=batch)
+        self.ship_lifes.visible = False
+        self.over = False
 
     """
     Načítanie všetkých spritov
@@ -345,7 +378,10 @@ class Game:
         self.asteroid_images = ['Assetss/PNG/Meteors/meteorGrey_big1.png',
                            'Assetss/PNG/Meteors/meteorGrey_med1.png',
                            'Assetss/PNG/Meteors/meteorGrey_small1.png',
-                           'Assetss/PNG/Meteors/meteorGrey_tiny1.png']
+                           'Assetss/PNG/Meteors/meteorGrey_tiny1.png',
+                           'Assetss\PNG\Meteors\meteorGrey_big2.png',
+                           'Assetss\PNG\Meteors\meteorGrey_med2.png',   
+                           'Assetss\PNG\Meteors\meteorGrey_small2.png']
         
 
     """
@@ -364,7 +400,7 @@ class Game:
         #Vytvorenie Meteoritov
         self.create_asteroids(count=7)
         #Pridavanie novych asteroidoch každych 10 sekund
-        pyglet.clock.schedule_interval(self.create_asteroids, 10, 1)
+        pyglet.clock.schedule_interval(self.create_asteroids, 5, 1)
 
     def create_asteroids(self, dt=0, count=1):
         "Vytvorenie X asteroidov"
@@ -387,11 +423,44 @@ class Game:
             asteroid = Asteroid(img, position[0], position[1], tmp_speed_x, tmp_speed_y)
             game_objects.append(asteroid)
 
+    def lifes_draw(self):
+        sirka = 20
+        for i in range(lifes):
+            ship_lifes = pyglet.image.load(r'Assetss\PNG\UI\playerLife1_blue.png')
+            ship_life = pyglet.sprite.Sprite(ship_lifes, sirka, 20)
+            ship_life.draw()
+            sirka += 40
+
+    def load_win(self):
+        global score
+        self.win_ = pyglet.image.load(r'Assetss\PNG\UI\win.jpg')
+        self.background = pyglet.sprite.Sprite(self.win_)
+        self.background.scale_x = 0.5
+        self.background.scale_y = 0.5
+        self.win_text = pyglet.text.Label(text='Game Over!',x=WIDTH//2,y=HEIGHT//2+30,font_size=50,anchor_x='center',anchor_y='center', font_name='Comic Sans MS')
+        self.win_text1 = pyglet.text.Label(text=f'Your score:{score}',x=WIDTH//2,y=HEIGHT//2-30,font_size=30,anchor_x='center',anchor_y='center')
+        self.snd_win = pyglet.media.load(r'Assetss\Bonus\sfx_lose.ogg', streaming=False)
+        my_Player.delete()
+        my_Player.queue(self.snd_win)
+        my_Player.play()
+
+    def game_stat_control(self):
+        if lifes == 0:
+            if self.over == False:
+                self.over = True
+                self.game_over()
+
+    def game_over(self):
+        game_objects.clear()
+        self.load_win()
+        
+
+        
     """
     Event metóda ktorá sa volá na udalosť on_draw stále dookola
     """
     def draw_game(self):
-        global score, scoreLabel
+        global score, scoreLabel, lifes
         
         # Vymaže aktualny obsah okna
         self.window.clear()
@@ -399,7 +468,15 @@ class Game:
         self.background.draw()
         
         scoreLabel = pyglet.text.Label(text=str(score), font_size=40,x = 1150, y = 760, anchor_x='right', anchor_y='center')
+        if self.over:
+            self.win_text.draw()
+            self.win_text1.draw()
+            return
         scoreLabel.draw()
+        
+
+
+
 
         "Vykreslenie koliznych koliečok"
         # for o in game_objects:
@@ -419,6 +496,10 @@ class Game:
 
                 # Restore remembered state (this cancels the glTranslatef)
                 gl.glPopMatrix()
+        
+        
+        self.lifes_draw()
+        self.game_stat_control()
 
     """
     Event metóda pre spracovanie klávesových vstupov
