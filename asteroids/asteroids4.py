@@ -24,7 +24,7 @@ pressed_keyboards = set()       #MNOŽINA ZMAČKNUTÝCH KLÁVES
 "Laser"
 DELAY = 0.3
 LASERLIFETIME = 1.5
-LASERSPEED = 10000
+LASERSPEED = 300
 
 
 
